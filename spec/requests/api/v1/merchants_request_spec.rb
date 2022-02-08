@@ -20,9 +20,6 @@ RSpec.describe 'The Merchants API' do
 
           expect(merchant[:attributes]).to have_key(:name)
           expect(merchant[:attributes][:name]).to be_a(String)
-
-          # expect(merchant).to have_key(:relationships)
-          # expect(merchant[:relationships]).to be_a(Hash)
         end
       end
     end
