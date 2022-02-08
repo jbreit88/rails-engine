@@ -74,7 +74,7 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when the record does not exist' do
-      let (:item_id) { 1000 }
+      let(:item_id) { 1000 }
 
       it 'returns error code and message' do
         expect(response).to have_http_status(404)

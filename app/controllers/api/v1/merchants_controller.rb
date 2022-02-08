@@ -1,5 +1,4 @@
 class Api::V1::MerchantsController < ApplicationController
-
   def index
     @merchants = MerchantSerializer.new(Merchant.all)
     json_response(@merchants)

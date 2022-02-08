@@ -1,5 +1,4 @@
 module ExceptionHandler
-  # provides the more graceful 'included' methods
   extend ActiveSupport::Concern
 
   included do
@@ -12,5 +11,3 @@ module ExceptionHandler
     end
   end
 end
-
-# In our create method in TodosController we are using create! instead of create. This way the model will raise an exception ActiveRecord:RecordInvalid. This way we avoid deep nested if statements in our controller and we rescue from the exception in the ExceptionHandler.

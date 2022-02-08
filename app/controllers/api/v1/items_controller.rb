@@ -1,5 +1,4 @@
 class Api::V1::ItemsController < ApplicationController
-
   def index
     @items = ItemSerializer.new(Item.all)
     json_response(@items)
