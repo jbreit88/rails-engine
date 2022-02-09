@@ -251,4 +251,70 @@ RSpec.describe 'The Items API' do
       expect(Invoice.where(id: invoice_2.id)).to exist
     end
   end
+
+  describe 'GET /api/v1/items/find_all' do
+    let!(:new_item_1) { create(:item, name: 'Test Item') }
+
+    context 'when a full name is passed' do
+      before { get '/api/v1/items/find_all', params: {name: 'Test Item' } }
+
+      it 'returns a list of items with that name' do
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(1)
+        expect(items[:data][0][:attributes][:name]).to eq('Test Item')
+        expect(response).to have_http_status(200)
+      end
+    end
+
+    context 'when a partial term is passed' do
+      let!(:new_item_2) {create(:item, name: 'tasertestic Thing') }
+
+      before { get '/api/v1/items/find_all', params: {name: 'test' } }
+
+      it 'returns items with the term in their name' do
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(2)
+        expect(response).to have_http_status(200)
+
+        items[:data].each do |item|
+          expect(item[:attributes][:name].downcase.include?('test')).to be true
+        end
+      end
+    end
+  end
+
+  describe 'GET /api/v1/items/find' do
+    let!(:new_item_1) { create(:item, name: 'Test Item') }
+
+    context 'when a full name is passed' do
+      before { get '/api/v1/items/find', params: {name: 'Test Item' } }
+
+      it 'returns a single item with that name' do
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(1)
+        expect(items[:data][0][:attributes][:name]).to eq('Test Item')
+        expect(response).to have_http_status(200)
+      end
+    end
+
+    context 'when a partial term is passed' do
+      let!(:new_item_2) {create(:item, name: 'tasertestic Thing') }
+
+      before { get '/api/v1/items/find', params: {name: 'test' } }
+
+      it 'returns the first item that matches that partial search' do
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(1)
+        expect(response).to have_http_status(200)
+
+        items[:data].each do |item|
+          expect(item[:attributes][:name].downcase.include?('test')).to be true
+        end
+      end
+    end
+  end
 end

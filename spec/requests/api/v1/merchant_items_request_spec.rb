@@ -44,7 +44,6 @@ RSpec.describe 'The MerchantItems API' do
         get "/api/v1/merchants/string-instead-of-integer/items"
         merchant_items = JSON.parse(response.body, symbolize_names: true)
 
-        require "pry"; binding.pry
         expect(response).to have_http_status(404)
       end
     end
