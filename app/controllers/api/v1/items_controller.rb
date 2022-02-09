@@ -40,6 +40,20 @@ class Api::V1::ItemsController < ApplicationController
     json_response(@item, 204)
   end
 
+  def find_all
+    search_term = params[:name]
+    @items = ItemSerializer.new(Item.search(search_term))
+
+    json_response(@items)
+  end
+
+  def find
+    search_term = params[:name]
+    @item = ItemSerializer.new(Item.search(search_term).limit(1))
+
+    json_response(@item)
+  end
+
   private
 
   def item_params
