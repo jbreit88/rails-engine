@@ -217,4 +217,38 @@ RSpec.describe 'The Items API' do
       end
     end
   end
+
+  describe 'DELETE /api/v1/item/:id' do
+
+    it 'returns status code 204 and deletes other dependent data' do
+      merchant = Merchant.create!(name: 'Silly Things')
+
+      item_1 = Item.create!(name: 'An Item', description: 'It does things', unit_price: 10.50, merchant_id: merchant.id)
+      item_2 = Item.create!(name: 'Another Item', description: 'It does other things', unit_price: 10.50, merchant_id: merchant.id)
+
+      customer = Customer.create!(first_name: 'Bob', last_name: 'Keely')
+
+      invoice_1 = Invoice.create!(customer_id: customer.id, merchant_id: merchant.id)
+
+      invoice_item_1 = InvoiceItem.create!(item_id: item_1.id, invoice_id: invoice_1.id, quantity: 2, unit_price: item_1.unit_price)
+
+      invoice_2 = Invoice.create!(customer_id: customer.id, merchant_id: merchant.id)
+
+      invoice_item_2 = InvoiceItem.create!(item_id: item_1.id, invoice_id: invoice_2.id, quantity: 2, unit_price: item_1.unit_price)
+      invoice_item_3 = InvoiceItem.create!(item_id: item_2.id, invoice_id: invoice_2.id, quantity: 2, unit_price: item_2.unit_price)
+
+      delete "/api/v1/items/#{item_1.id}"
+
+      expect(response).to have_http_status(204)
+      expect(response.body).to be_empty
+      expect(Item.where(id: item_1.id)).not_to exist
+
+      expect(InvoiceItem.where(id: invoice_item_1.id)).not_to exist
+      expect(InvoiceItem.where(id: invoice_item_2.id)).not_to exist
+      expect(InvoiceItem.where(id: invoice_item_3.id)).to exist
+
+      expect(Invoice.where(id: invoice_1.id)).not_to exist
+      expect(Invoice.where(id: invoice_2.id)).to exist
+    end
+  end
 end

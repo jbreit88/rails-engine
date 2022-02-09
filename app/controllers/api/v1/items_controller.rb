@@ -25,6 +25,20 @@ class Api::V1::ItemsController < ApplicationController
     end
   end
 
+  def destroy
+    @item = Item.find(params[:id])
+
+    @item.invoices.each do |invoice|
+      # require "pry"; binding.pry
+      if invoice.invoice_items.count <= 1
+        invoice.destroy
+      end
+    end
+
+    @item.destroy
+
+    json_response(@item, 204)
+  end
 
   private
 
