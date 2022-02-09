@@ -14,6 +14,17 @@ class Api::V1::ItemsController < ApplicationController
     json_response(@item, :created)
   end
 
+  def update
+    @item = Item.find(params[:id])
+
+    if @item.update(item_params)
+      @item.update(item_params)
+      json_response(ItemSerializer.new(@item))
+    elsif Merchant.find(params[:merchant_id]) == nil
+      json_response({ message: e.message }, 404)
+    end
+  end
+
 
   private
 
