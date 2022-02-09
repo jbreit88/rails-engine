@@ -4,7 +4,7 @@ RSpec.describe 'The Items API' do
   let!(:items_list) { create_list(:item, 10) }
   let(:item_id) { items_list.first.id }
 
-  context 'GET /items' do
+  describe 'GET /items' do
     context 'when there are records' do
       it 'returns a list of items' do
         get '/api/v1/items'
@@ -47,7 +47,7 @@ RSpec.describe 'The Items API' do
     end
   end
 
-  context 'GET /items/:id' do
+  describe 'GET /items/:id' do
     before { get "/api/v1/items/#{item_id}" }
 
     context 'when record exists' do
@@ -79,6 +79,63 @@ RSpec.describe 'The Items API' do
       it 'returns error code and message' do
         expect(response).to have_http_status(404)
         expect(response.body).to match(/Couldn't find Item/)
+      end
+    end
+  end
+
+  describe 'POST /items' do
+    let!(:merchant) { Merchant.create(name: 'Sellthings')}
+
+    let(:valid_attributes) { { name: 'New Item', description: 'This is an item', unit_price: 12.12, merchant_id: merchant.id } }
+
+    context 'when the request is valid' do
+      before { post '/api/v1/items', params: valid_attributes }
+
+      it 'creates an item' do
+        item = JSON.parse(response.body, symbolize_names: true)
+
+        expect(item.count).to eq 1
+        expect(response).to have_http_status(201)
+
+        expect(item[:data]).to have_key(:id)
+        expect(item[:data][:id]).to be_an(String)
+
+        expect(item[:data][:attributes]).to have_key(:name)
+        expect(item[:data][:attributes][:name]).to be_a(String)
+        expect(item[:data][:attributes][:name]).to eq('New Item')
+
+        expect(item[:data][:attributes]).to have_key(:description)
+        expect(item[:data][:attributes][:description]).to be_a(String)
+        expect(item[:data][:attributes][:description]).to eq('This is an item')
+
+        expect(item[:data][:attributes]).to have_key(:unit_price)
+        expect(item[:data][:attributes][:unit_price]).to be_a(Float)
+        expect(item[:data][:attributes][:unit_price]).to eq(12.12)
+
+        expect(item[:data][:attributes]).to have_key(:merchant_id)
+        expect(item[:data][:attributes][:merchant_id]).to be_a(Integer)
+        expect(item[:data][:attributes][:merchant_id]).to eq(merchant.id)
+      end
+    end
+
+    context 'when uneccessary params are passed' do
+      let(:valid_attributes_and_extra) { { name: 'New Item', description: 'This is an item', unit_price: 12.12, merchant_id: merchant.id, title: 'something' } }
+
+      before { post '/api/v1/items', params: valid_attributes_and_extra }
+
+      it 'ignores invalid params' do
+        item = JSON.parse(response.body, symbolize_names: true)
+        
+        expect(item[:data]).not_to have_key(:title)
+      end
+    end
+
+    context 'when request is invalid' do
+      before { post '/api/v1/items', params: { name: 'thing'} }
+
+      it 'returns an error message and status' do
+        expect(response).to have_http_status(422)
+        expect(response.body).to match(/Validation failed:/)
       end
     end
   end
