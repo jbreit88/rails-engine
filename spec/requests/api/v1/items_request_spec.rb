@@ -84,7 +84,7 @@ RSpec.describe 'The Items API' do
   end
 
   describe 'POST /items' do
-    let!(:merchant) { Merchant.create(name: 'Sellthings')}
+    let!(:merchant) { Merchant.create(name: 'Sellthings') }
 
     let(:valid_attributes) { { name: 'New Item', description: 'This is an item', unit_price: 12.12, merchant_id: merchant.id } }
 
@@ -119,7 +119,9 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when uneccessary params are passed' do
-      let(:valid_attributes_and_extra) { { name: 'New Item', description: 'This is an item', unit_price: 12.12, merchant_id: merchant.id, title: 'something' } }
+      let(:valid_attributes_and_extra) do
+        { name: 'New Item', description: 'This is an item', unit_price: 12.12, merchant_id: merchant.id, title: 'something' }
+      end
 
       before { post '/api/v1/items', params: valid_attributes_and_extra }
 
@@ -131,7 +133,7 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when request is invalid' do
-      before { post '/api/v1/items', params: { name: 'thing'} }
+      before { post '/api/v1/items', params: { name: 'thing' } }
 
       it 'returns an error message and status' do
         expect(response).to have_http_status(422)
@@ -142,14 +144,13 @@ RSpec.describe 'The Items API' do
 
   describe 'PUT /api/v1/items/:id' do
     context 'when the record exists' do
-      let!(:merchant) { Merchant.create(name: 'Sellthings')}
+      let!(:merchant) { Merchant.create(name: 'Sellthings') }
 
-      let(:valid_attributes) { {name: 'Updated Name', description: 'Updated description', unit_price: 13.13, merchant_id: merchant.id } }
+      let(:valid_attributes) { { name: 'Updated Name', description: 'Updated description', unit_price: 13.13, merchant_id: merchant.id } }
 
-      before { put "/api/v1/items/#{item_id}", params: valid_attributes}
+      before { put "/api/v1/items/#{item_id}", params: valid_attributes }
 
       it 'updates the record and returns success code' do
-
         item = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(200)
@@ -176,24 +177,22 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when bad merchant_id is passed' do
-      let(:bad_id) { {name: 'Updated Name', description: 'Updated description', unit_price: 13.13, merchant_id: '12345678' } }
+      let(:bad_id) { { name: 'Updated Name', description: 'Updated description', unit_price: 13.13, merchant_id: '12345678' } }
 
-      before { put "/api/v1/items/#{item_id}", params: bad_id}
+      before { put "/api/v1/items/#{item_id}", params: bad_id }
 
       it 'returns error message and status' do
-        # require "pry"; binding.pry
         expect(response).to have_http_status(404)
         expect(response.body).to match(/Couldn't find Merchant/)
       end
     end
 
     context 'when no merchant id is passed' do
-      let(:valid_attributes) { {name: 'Updated Name', description: 'Updated description' } }
+      let(:valid_attributes) { { name: 'Updated Name', description: 'Updated description' } }
 
-      before { put "/api/v1/items/#{item_id}", params: valid_attributes}
+      before { put "/api/v1/items/#{item_id}", params: valid_attributes }
 
       it 'updates the record and returns success code' do
-
         item = JSON.parse(response.body, symbolize_names: true)
 
         expect(response).to have_http_status(200)
@@ -219,7 +218,6 @@ RSpec.describe 'The Items API' do
   end
 
   describe 'DELETE /api/v1/item/:id' do
-
     it 'returns status code 204 and deletes other dependent data' do
       merchant = Merchant.create!(name: 'Silly Things')
 
@@ -253,10 +251,11 @@ RSpec.describe 'The Items API' do
   end
 
   describe 'GET /api/v1/items/find_all' do
-    let!(:new_item_1) { create(:item, name: 'Test Item') }
+    let!(:new_item_1) { create(:item, name: 'Test Item', unit_price: 4.55) }
+    let!(:new_item_2) { create(:item, name: 'tasertestic Thing', unit_price: 1000.78) }
 
     context 'when a full name is passed' do
-      before { get '/api/v1/items/find_all', params: {name: 'Test Item' } }
+      before { get '/api/v1/items/find_all', params: { name: 'Test Item' } }
 
       it 'returns a list of items with that name' do
         items = JSON.parse(response.body, symbolize_names: true)
@@ -268,9 +267,7 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when a partial term is passed' do
-      let!(:new_item_2) {create(:item, name: 'tasertestic Thing') }
-
-      before { get '/api/v1/items/find_all', params: {name: 'test' } }
+      before { get '/api/v1/items/find_all', params: { name: 'test' } }
 
       it 'returns items with the term in their name' do
         items = JSON.parse(response.body, symbolize_names: true)
@@ -282,14 +279,117 @@ RSpec.describe 'The Items API' do
           expect(item[:attributes][:name].downcase.include?('test')).to be true
         end
       end
+
+      it 'returns items in alphabetical order' do
+        items = JSON.parse(response.body, symbolize_names: true)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+        expect(items[:data].last[:attributes][:name]).to eq(new_item_2.name)
+      end
+    end
+
+    context 'params are passed for price selection' do
+      it 'returns all items with a unit price over 4.54' do
+        get '/api/v1/items/find_all', params: { min_price: 4.54 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(200)
+
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_1.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+
+        items[:data].each do |item|
+          expect(item[:attributes]).to have_key(:name)
+          expect(item[:attributes]).to have_key(:unit_price)
+          expect(item[:attributes]).to have_key(:description)
+          expect(item[:attributes]).to have_key(:merchant_id)
+        end
+
+        expect(items[:data].count).to be >= 2
+      end
+
+      it 'returns all items with a unit price less than 1000.79' do
+        get '/api/v1/items/find_all', params: { max_price: 1000.79 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(200)
+
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_2.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_2.name)
+
+        items[:data].each do |item|
+          expect(item[:attributes]).to have_key(:name)
+          expect(item[:attributes]).to have_key(:unit_price)
+          expect(item[:attributes]).to have_key(:description)
+          expect(item[:attributes]).to have_key(:merchant_id)
+        end
+
+        expect(items[:data].count).to be >= 2
+      end
+
+      it 'returns the items in range when both min_price and max_price parameters are sent' do
+        get '/api/v1/items/find_all', params: { min_price: 4.54, max_price: 1000.79 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(response).to have_http_status(200)
+
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_1.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+
+        expect(items[:data].last[:attributes][:unit_price]).to eq(new_item_2.unit_price)
+        expect(items[:data].last[:attributes][:name]).to eq(new_item_2.name)
+
+        items[:data].each do |item|
+          expect(item[:attributes]).to have_key(:name)
+          expect(item[:attributes]).to have_key(:unit_price)
+          expect(item[:attributes]).to have_key(:description)
+          expect(item[:attributes]).to have_key(:merchant_id)
+        end
+
+        expect(items[:data].count).to be >= 2
+      end
+
+      it 'returns an error message when price and name params are passed together' do
+        get '/api/v1/items/find_all', params: { name: 'test', min_price: 4.99, max_price: 11.76 }
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+      end
+
+      it 'returns an error message when no params are passed' do
+        get '/api/v1/items/find_all'
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+      end
+
+      it 'returns an error message when a param is passed in without a value' do
+        get '/api/v1/items/find_all?name='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+
+        get '/api/v1/items/find_all?min_price='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+
+        get '/api/v1/items/find_all?max_price='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+      end
     end
   end
 
   describe 'GET /api/v1/items/find' do
-    let!(:new_item_1) { create(:item, name: 'Test Item') }
+    let!(:new_item_1) { create(:item, name: 'Test Item', unit_price: 5.00) }
+    let!(:new_item_2) { create(:item, name: 'tasertestic Thing', unit_price: 11.75) }
 
     context 'when a full name is passed' do
-      before { get '/api/v1/items/find', params: {name: 'Test Item' } }
+      before { get '/api/v1/items/find', params: { name: 'Test Item' } }
 
       it 'returns a single item with that name' do
         items = JSON.parse(response.body, symbolize_names: true)
@@ -301,19 +401,96 @@ RSpec.describe 'The Items API' do
     end
 
     context 'when a partial term is passed' do
-      let!(:new_item_2) {create(:item, name: 'tasertestic Thing') }
-
-      before { get '/api/v1/items/find', params: {name: 'test' } }
+      before { get '/api/v1/items/find', params: { name: 'test' } }
 
       it 'returns the first item that matches that partial search' do
         items = JSON.parse(response.body, symbolize_names: true)
 
         expect(items[:data].count).to eq(1)
         expect(response).to have_http_status(200)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
 
         items[:data].each do |item|
           expect(item[:attributes][:name].downcase.include?('test')).to be true
         end
+      end
+
+      it 'returns an item when params are passed in the URI' do
+        get '/api/v1/items/find?name=test'
+
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(1)
+        expect(response).to have_http_status(200)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+
+        items[:data].each do |item|
+          expect(item[:attributes][:name].downcase.include?('test')).to be true
+        end
+      end
+    end
+
+    context 'params are passed for price selection' do
+      it 'returns the first item with a unit price over 4.99' do
+        get '/api/v1/items/find', params: { min_price: 4.99 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+        expect(items[:data].count).to eq(1)
+        expect(response).to have_http_status(200)
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_1.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+      end
+
+      it 'returns the first item with a unit price less than 11.76' do
+        get '/api/v1/items/find', params: { max_price: 11.76 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+        expect(items[:data].count).to eq(1)
+        expect(response).to have_http_status(200)
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_2.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_2.name)
+      end
+
+      it 'returns the cheapest item when both min_price and max_price parameters are sent' do
+        get '/api/v1/items/find', params: { min_price: 4.99, max_price: 11.76 }
+
+        items = JSON.parse(response.body, symbolize_names: true)
+
+        expect(items[:data].count).to eq(1)
+        expect(response).to have_http_status(200)
+        expect(items[:data].first[:attributes][:unit_price]).to eq(new_item_1.unit_price)
+        expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
+      end
+
+      it 'returns an error message when price and name params are passed together' do
+        get '/api/v1/items/find', params: { name: 'test', min_price: 4.99, max_price: 11.76 }
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+      end
+
+      it 'returns an error message when no params are passed' do
+        get '/api/v1/items/find'
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+      end
+
+      it 'returns an error message when a param is passed in without a value' do
+        get '/api/v1/items/find?name='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+
+        get '/api/v1/items/find?min_price='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
+
+        get '/api/v1/items/find?max_price='
+
+        expect(response).to have_http_status(400)
+        expect(response.body).to match(/params error/)
       end
     end
   end
