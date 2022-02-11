@@ -21,7 +21,6 @@ class Api::V1::ItemsController < ApplicationController
       @item.update(item_params)
       json_response(ItemSerializer.new(@item))
     elsif Merchant.find(params[:merchant_id]).nil?
-      json_response({ message: e.message }, 404)
     end
   end
 
@@ -29,7 +28,6 @@ class Api::V1::ItemsController < ApplicationController
     @item = Item.find(params[:id])
 
     @item.invoices.each do |invoice|
-      # require "pry"; binding.pry
       invoice.destroy if invoice.invoice_items.count <= 1
     end
 
