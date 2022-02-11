@@ -4,6 +4,5 @@ class Api::V1::MerchantItemsController < ApplicationController
     @items = ItemSerializer.new(merchant.items)
 
     render json: @items
-    # json_response(@items)
   end
 end
