@@ -6,6 +6,6 @@ class Merchant < ApplicationRecord
   has_many :invoice_items, through: :invoices
 
   def self.search(search_term)
-    where("name ILIKE ?", "%#{search_term}%")
+    where('name ILIKE ?', "%#{search_term}%").order(:name)
   end
 end

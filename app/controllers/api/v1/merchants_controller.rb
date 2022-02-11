@@ -9,17 +9,21 @@ class Api::V1::MerchantsController < ApplicationController
     json_response(@merchant)
   end
 
-  def find_all
-    search_term = params[:name]
-    @merchants = MerchantSerializer.new(Merchant.search(search_term))
-
-    json_response(@merchants)
-  end
+  # def find_all
+  #   search_term = params[:name]
+  #   @merchants = MerchantSerializer.new(Merchant.search(search_term))
+  #
+  #   json_response(@merchants)
+  # end
 
   def find
-    search_term = params[:name]
-    @merchant = MerchantSerializer.new(Merchant.search(search_term).limit(1))
+    if params[:name] == ''
+      json_response({ error: 'params error - please only search for name or price' }, 400)
+    else
+      search_term = params[:name]
+      @merchant = MerchantSerializer.new(Merchant.search(search_term).limit(params[:limit]))
 
-    json_response(@merchant)
+      json_response(@merchant)
+    end
   end
 end

@@ -20,7 +20,7 @@ class Api::V1::ItemsController < ApplicationController
     if @item.update(item_params)
       @item.update(item_params)
       json_response(ItemSerializer.new(@item))
-    elsif Merchant.find(params[:merchant_id]) == nil
+    elsif Merchant.find(params[:merchant_id]).nil?
       json_response({ message: e.message }, 404)
     end
   end
@@ -30,9 +30,7 @@ class Api::V1::ItemsController < ApplicationController
 
     @item.invoices.each do |invoice|
       # require "pry"; binding.pry
-      if invoice.invoice_items.count <= 1
-        invoice.destroy
-      end
+      invoice.destroy if invoice.invoice_items.count <= 1
     end
 
     @item.destroy
@@ -40,18 +38,19 @@ class Api::V1::ItemsController < ApplicationController
     json_response(@item, 204)
   end
 
-  def find_all
-    search_term = params[:name]
-    @items = ItemSerializer.new(Item.search(search_term))
-
-    json_response(@items)
-  end
-
   def find
-    search_term = params[:name]
-    @item = ItemSerializer.new(Item.search(search_term).limit(1))
+    if params[:name] && params[:min_price] || params[:name] && params[:max_price]
+      json_response({ error: 'params error - please only search for name or price' }, 400)
+    elsif params[:name].nil? && params[:min_price].nil? && params[:max_price].nil?
+      json_response({ error: 'params error - please submit a query for search' }, 400)
+    elsif params[:name] == '' || params[:min_price] == '' || params[:max_price] == ''
+      json_response({ error: 'params error - query cannot be empty' }, 400)
+    else
+      search_terms = { name: params[:name], min_price: params[:min_price], max_price: params[:max_price] }
+      @item = ItemSerializer.new(Item.search(search_terms).limit(params[:limit]))
 
-    json_response(@item)
+      json_response(@item)
+    end
   end
 
   private
