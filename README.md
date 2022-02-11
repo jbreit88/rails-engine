@@ -99,7 +99,232 @@ Finally, in order to use this API, you will have to start the server locally and
 - Start server
 `$ rails s`
     
-At this point teh API endpoints should be available. Use the endpoints outlined in the next section to return the desired data. If you encounter any errors or are unable to connect with the API, please confirm you followed the steps above and that your environment is properly set up.
+At this point the API endpoints should be available. Use the endpoints outlined in the next section to return the desired data. If you encounter any errors or are unable to connect with the API, please confirm you followed the steps above and that your environment is properly set up.
+
+## API Endpoints
+- All enpoints will be accessing the API from the base URI `http://localhost:3000/api/v1...`
+
+### Merchants Endpoints
+- `get http://localhost:3000/api/v1/merchants` : Returns all merchant data.
+```json
+  {
+    "data": [
+        {
+            "id": "1",
+            "type": "merchant",
+            "attributes": {
+                "name": "Schroeder-Jerde"
+            }
+        },
+        {
+            "id": "2",
+            "type": "merchant",
+            "attributes": {
+                "name": "Klein, Rempel and Jones"
+            }
+        }
+      ]
+   }
+   ```
+- `get http://localhost:3000/api/v1/merchants/:merchant_id` : Returns data on merchant associated with ID
+```json
+{
+    "data": {
+        "id": "42",
+        "type": "merchant",
+        "attributes": {
+            "name": "Glover Inc"
+        }
+    }
+}
+```
+- `get http://localhost:3000/api/v1/merchants/:merchant_id/items` : Returns all items associated with the merchant ID
+```json
+{
+    "data": [
+        {
+            "id": "2425",
+            "type": "item",
+            "attributes": {
+                "name": "Item Excepturi Rem",
+                "description": "Perferendis reprehenderit fugiat sit eos. Corporis ipsum ut. Natus molestiae quia rerum fugit quis. A cumque doloremque magni.",
+                "unit_price": 476.82,
+                "merchant_id": 99
+            }
+        }
+      ]
+   }
+ ```
+ - `get http://localhost:3000/api/v1/merchants/find?name=iLl` : Returns a single record for the parameter query passed for :name. Can be an exact or partial match
+ ```json
+ {
+    "data": [
+        {
+            "id": "28",
+            "type": "merchant",
+            "attributes": {
+                "name": "Schiller, Barrows and Parker"
+            }
+        }
+    ]
+}
+```
+- `get http://localhost:3000/api/v1/merchants/find_all?name=ILL` : Returns all merchant records with a partial match to the name query string.
+```json
+{
+    "data": [
+        {
+            "id": "28",
+            "type": "merchant",
+            "attributes": {
+                "name": "Schiller, Barrows and Parker"
+            }
+        },
+        {
+            "id": "13",
+            "type": "merchant",
+            "attributes": {
+                "name": "Tillman Group"
+            }
+        }
+     ]
+  }
+```
+
+ ### Item Endpoints
+ - `get http://localhost:3000/api/v1/items` : Returns all item records in database.
+ ```json
+ {
+    "data": [
+        {
+            "id": "4",
+            "type": "item",
+            "attributes": {
+                "name": "Item Nemo Facere",
+                "description": "Sunt eum id eius magni consequuntur delectus veritatis. Quisquam laborum illo ut ab. Ducimus in est id voluptas autem.",
+                "unit_price": 42.91,
+                "merchant_id": 1
+            }
+        },
+        {
+            "id": "5",
+            "type": "item",
+            "attributes": {
+                "name": "Item Expedita Aliquam",
+                "description": "Voluptate aut labore qui illum tempore eius. Corrupti cum et rerum. Enim illum labore voluptatem dicta consequatur. Consequatur sunt consequuntur ut officiis.",
+                "unit_price": 687.23,
+                "merchant_id": 1
+            }
+        }
+     ]
+  }
+ ```
+ - `get http://localhost:3000/api/v1/items/:item_id` : Returns item information for item associated with the passed ID
+ ```json
+ {
+    "data": {
+        "id": "179",
+        "type": "item",
+        "attributes": {
+            "name": "Item Qui Veritatis",
+            "description": "Totam labore quia harum dicta eum consequatur qui. Corporis inventore consequatur. Illum facilis tempora nihil placeat rerum sint est. Placeat ut aut. Eligendi perspiciatis unde eum sapiente velit.",
+            "unit_price": 906.17,
+            "merchant_id": 9
+        }
+    }
+}
+```
+- `post http://localhost:3000/api/v1/items` : Create an Item record.
+```json
+{
+    "data": {
+        "id": "2521",
+        "type": "item",
+        "attributes": {
+            "name": "Shiny Itemy Item",
+            "description": "It does a lot of things real good.",
+            "unit_price": 123.45,
+            "merchant_id": 43
+        }
+    }
+}
+```
+- `delete http://localhost:3000/api/v1/items/:item_id` : Remove Item record associated with the passed ID
+- `put http://localhost:3000/api/v1/items/:item_id` : Update the attributes of an Item record
+- `get http://localhost:3000/api/v1/items/:item_id/merchant` : Returns the Merchant data for the item ID
+```json
+{
+    "data": {
+        "id": "11",
+        "type": "merchant",
+        "attributes": {
+            "name": "Pollich and Sons"
+        }
+    }
+}
+```
+- `get http://localhost:3000/api/v1/items/find?name=hArU` : Find single item record by partial or exact name match. Pass param in as :name.
+```json
+{
+    "data": [
+        {
+            "id": "1209",
+            "type": "item",
+            "attributes": {
+                "name": "Item At Harum",
+                "description": "Fuga et aut libero veniam tenetur. Ex eligendi modi libero aut numquam at. Velit dolores non ut cupiditate aut consequatur. Maiores quas vel qui aut et voluptatum. Qui consequatur illo.",
+                "unit_price": 841.97,
+                "merchant_id": 55
+            }
+        }
+    ]
+}
+```
+- `get http://localhost:3000/api/v1/items/find?min_price=50` : Returns all items with a value greater than :min_price. Can also use :max_price and search for anything less than that value.
+```json
+{
+    "data": [
+        {
+            "id": "587",
+            "type": "item",
+            "attributes": {
+                "name": "Item Animi In",
+                "description": "Eum necessitatibus eos aliquid consequuntur. Occaecati ut quia et. Vel molestiae eum beatae ut nostrum. Beatae rem cumque autem.",
+                "unit_price": 50.03,
+                "merchant_id": 29
+            }
+        }
+    ]
+}
+```
+- `get http://localhost:3000/api/v1/items/find_all?name=haru` : Returns all item records matching the partial or full name passed in the name param.
+```json
+{
+    "data": [
+        {
+            "id": "1209",
+            "type": "item",
+            "attributes": {
+                "name": "Item At Harum",
+                "description": "Fuga et aut libero veniam tenetur. Ex eligendi modi libero aut numquam at. Velit dolores non ut cupiditate aut consequatur. Maiores quas vel qui aut et voluptatum. Qui consequatur illo.",
+                "unit_price": 841.97,
+                "merchant_id": 55
+            }
+        },
+        {
+            "id": "1344",
+            "type": "item",
+            "attributes": {
+                "name": "Item Aut Harum",
+                "description": "Illum ducimus officia possimus est. Rerum sed quia omnis necessitatibus. A sed cupiditate blanditiis ut minus sed.",
+                "unit_price": 513.97,
+                "merchant_id": 59
+            }
+        }
+     ]
+  }
+```
+
 
 ## **Authors** ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
