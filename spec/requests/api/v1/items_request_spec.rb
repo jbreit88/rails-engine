@@ -76,7 +76,7 @@ RSpec.describe 'The Items API' do
     context 'when the record does not exist' do
       let(:item_id) { 1000 }
 
-      it 'returns error code and message' do
+      it 'returns error code and message' do # sad path
         expect(response).to have_http_status(404)
         expect(response.body).to match(/Couldn't find Item/)
       end
@@ -132,7 +132,7 @@ RSpec.describe 'The Items API' do
       end
     end
 
-    context 'when request is invalid' do
+    context 'when request is invalid' do # sad path
       before { post '/api/v1/items', params: { name: 'thing' } }
 
       it 'returns an error message and status' do
@@ -176,7 +176,7 @@ RSpec.describe 'The Items API' do
       end
     end
 
-    context 'when bad merchant_id is passed' do
+    context 'when bad merchant_id is passed' do # sad path
       let(:bad_id) { { name: 'Updated Name', description: 'Updated description', unit_price: 13.13, merchant_id: '12345678' } }
 
       before { put "/api/v1/items/#{item_id}", params: bad_id }
@@ -280,7 +280,7 @@ RSpec.describe 'The Items API' do
         end
       end
 
-      it 'returns items in alphabetical order' do
+      it 'returns items in alphabetical order' do # edge case testing
         items = JSON.parse(response.body, symbolize_names: true)
         expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
         expect(items[:data].last[:attributes][:name]).to eq(new_item_2.name)
@@ -351,21 +351,21 @@ RSpec.describe 'The Items API' do
         expect(items[:data].count).to be >= 2
       end
 
-      it 'returns an error message when price and name params are passed together' do
+      it 'returns an error message when price and name params are passed together' do #edge case
         get '/api/v1/items/find_all', params: { name: 'test', min_price: 4.99, max_price: 11.76 }
 
         expect(response).to have_http_status(400)
         expect(response.body).to match(/params error/)
       end
 
-      it 'returns an error message when no params are passed' do
+      it 'returns an error message when no params are passed' do #edge case
         get '/api/v1/items/find_all'
 
         expect(response).to have_http_status(400)
         expect(response.body).to match(/params error/)
       end
 
-      it 'returns an error message when a param is passed in without a value' do
+      it 'returns an error message when a param is passed in without a value' do #edge case
         get '/api/v1/items/find_all?name='
 
         expect(response).to have_http_status(400)
@@ -462,7 +462,7 @@ RSpec.describe 'The Items API' do
         expect(items[:data].first[:attributes][:name]).to eq(new_item_1.name)
       end
 
-      it 'returns an error message when price and name params are passed together' do
+      it 'returns an error message when price and name params are passed together' do #edge case
         get '/api/v1/items/find', params: { name: 'test', min_price: 4.99, max_price: 11.76 }
 
         expect(response).to have_http_status(400)
